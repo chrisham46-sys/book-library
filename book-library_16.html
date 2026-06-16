@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Book Library</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#21253a;
+  --text:#e8eaf0;--text2:#8b90a8;--text3:#4a5070;
+  --border:#272c42;--border2:#363d5a;
+  --accent:#4ecca3;--accent-bg:#0d2820;--accent-text:#4ecca3;
+  --gold:#e8b84b;--gold-bg:#1e1806;
+  --danger:#f87171;--danger-bg:#2d0f0f;
+  --radius:6px;--radius-lg:10px;
+  --shadow:0 1px 3px rgba(0,0,0,0.5),0 2px 8px rgba(0,0,0,0.3);
+}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh}
+
+/* topbar */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:50}
+.topbar-brand{font-size:16px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.topbar-brand i{color:var(--accent)}
+.topbar-nav{display:flex;gap:2px}
+.topbar-nav button{padding:6px 14px;border:none;border-radius:var(--radius);background:none;color:var(--text2);cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s}
+.topbar-nav button:hover{background:var(--surface2);color:var(--text)}
+.topbar-nav button.active{background:var(--accent-bg);color:var(--accent-text);font-weight:500}
+
+.page{display:none;padding:2rem}.page.active{display:block}
+
+/* stat cards */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:2rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;box-shadow:var(--shadow)}
+.stat-card-icon{width:36px;height:36px;border-radius:var(--radius);background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:.75rem}
+.stat-card-icon i{color:var(--accent);font-size:18px}
+.stat-card-icon.gold{background:var(--gold-bg)}.stat-card-icon.gold i{color:var(--gold)}
+.stat-card-num{font-size:28px;font-weight:600;line-height:1;margin-bottom:4px}
+.stat-card-lbl{font-size:12px;color:var(--text2)}
+
+/* toolbar */
+.toolbar{display:flex;gap:8px;margin-bottom:1.25rem;align-items:center;flex-wrap:wrap}
+.toolbar-left{display:flex;gap:8px;flex:1;flex-wrap:wrap}
+input.search{padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;min-width:220px;flex:1}
+input.search:focus{outline:none;border-color:var(--border2)}
+input.filter-sm{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;width:130px}
+input.filter-sm:focus{outline:none;border-color:var(--border2)}
+
+/* buttons */
+button{padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+button:hover{background:var(--surface2);border-color:var(--border2)}
+button.btn-primary{background:var(--accent);color:#000;border-color:var(--accent)}
+button.btn-primary:hover{opacity:.88}
+button.btn-ghost{border-color:transparent;background:none}
+button.btn-ghost:hover{background:var(--surface2);border-color:var(--border)}
+button.btn-danger{color:var(--danger);border-color:var(--danger)}
+button.btn-danger:hover{background:var(--danger-bg)}
+button:disabled{opacity:.4;cursor:not-allowed}
+
+/* book list */
+.book-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
+/* cols: checkbox | icon | title+author | publisher | year | edition+cond | price | search | action */
+.blc{display:grid;grid-template-columns:36px 44px 1fr 150px 70px 150px 100px 120px 40px;align-items:center;padding:0 14px}
+.book-list-header{background:var(--surface2);border-bottom:1px solid var(--border);min-height:38px}
+.book-list-header .blc{min-height:38px}
+.th{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.04em;text-transform:uppercase;cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;padding:4px 0;border-radius:4px;transition:color .15s}
+.th:hover{color:var(--text)}
+.th.sorted{color:var(--accent)}
+.th i{font-size:12px;opacity:.6}
+.th.sorted i{opacity:1}
+.book-row .blc{min-height:64px;border-bottom:1px solid var(--border);transition:background .1s}
+.book-row:last-child .blc{border-bottom:none}
+.book-row:hover .blc{background:var(--surface2)}
+.book-thumb{width:36px;height:48px;background:var(--accent-bg);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.book-title{font-weight:500;font-size:13px;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book-author{font-size:12px;color:var(--text2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book-meta,.book-year{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.price-links-cell{display:flex;gap:6px;align-items:center}
+.price-links-cell a{font-size:11px;color:var(--accent);text-decoration:none;padding:2px 7px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);transition:all .1s;white-space:nowrap}
+.price-links-cell a:hover{background:var(--accent-bg);border-color:var(--accent)}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500}
+.badge-accent{background:var(--accent-bg);color:var(--accent-text)}
+.badge-gold{background:var(--gold-bg);color:var(--gold)}
+.badge-muted{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.row-action{display:flex;justify-content:center}
+/* checkboxes */
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.book-row.selected .blc{background:var(--accent-bg)}
+/* selection action bar */
+.select-bar{display:none;align-items:center;gap:12px;padding:10px 16px;background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius-lg);margin-bottom:12px}
+.select-bar.visible{display:flex}
+.select-bar-count{font-size:13px;font-weight:500;color:var(--accent);flex:1}
+.list-footer{font-size:12px;color:var(--text2);padding:.75rem 1rem;border-top:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between}
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--text2)}
+.empty-state i{font-size:48px;display:block;margin-bottom:12px;opacity:.3;color:var(--accent)}
+
+/* form */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;box-shadow:var(--shadow);max-width:680px}
+.form-section-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.label{font-size:12px;color:var(--text2);font-weight:500}
+input.f,textarea.f,select.f{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;width:100%;transition:border-color .15s}
+input.f:focus,textarea.f:focus,select.f:focus{outline:none;border-color:var(--border2)}
+hr.divider{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
+.lookup-row{display:flex;gap:8px}.lookup-row input{flex:1}
+.msg{font-size:12px;padding:5px 10px;border-radius:var(--radius);margin-top:6px;display:inline-block}
+.msg-ok{background:var(--accent-bg);color:var(--accent-text)}
+.msg-err{background:var(--danger-bg);color:var(--danger)}
+.msg-info{background:var(--gold-bg);color:var(--gold)}
+.results-list{margin-top:10px;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;max-height:240px;overflow-y:auto;background:var(--surface)}
+.result-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px}
+.result-item:last-child{border-bottom:none}
+.result-item:hover{background:var(--surface2)}
+.result-item .rt{font-weight:500;color:var(--text)}
+.result-item .rs{color:var(--text2);font-size:12px;margin-top:2px}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem;backdrop-filter:blur(3px)}
+.modal-bg.hidden{display:none}
+.modal{background:var(--surface);border-radius:var(--radius-lg);padding:0;width:min(520px,100%);max-height:88vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+.modal-header h2{font-size:16px;font-weight:600;line-height:1.3}
+.modal-body{padding:1.25rem 1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap}
+.detail-table{width:100%;font-size:13px;border-collapse:collapse}
+.detail-table td{padding:6px 0;vertical-align:top}
+.detail-table td:first-child{color:var(--text2);width:90px;padding-right:12px}
+.price-panel{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-top:12px}
+.price-panel-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.price-panel-links{display:flex;flex-wrap:wrap;gap:8px}
+.price-panel-links a{font-size:13px;color:var(--accent);text-decoration:none;padding:5px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);display:inline-flex;align-items:center;gap:5px}
+.price-panel-links a:hover{background:var(--accent-bg);border-color:var(--accent)}
+
+/* stats page */
+.stats-controls{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.stats-controls .field{min-width:140px;flex:1}
+.stats-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+.stats-table{width:100%;border-collapse:collapse;font-size:13px}
+.stats-table th{background:var(--surface2);padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap}
+.stats-table th:hover{color:var(--text)}
+.stats-table th.s-sorted{color:var(--accent)}
+.stats-table td{padding:9px 12px;border-top:1px solid var(--border);vertical-align:middle}
+.stats-table tr:hover td{background:var(--surface2)}
+.stats-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:1.5rem}
+.stats-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1.5rem}
+.stats-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;box-shadow:var(--shadow)}
+.stats-section h3{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text)}
+.stats-bar-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.stats-bar-row:last-child{border-bottom:none}
+.export-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:1rem}
+
+@media(max-width:860px){
+  .stats-row{grid-template-columns:1fr 1fr}
+  .blc{grid-template-columns:44px 1fr 90px 60px;} 
+  .blc>*:nth-child(n+5){display:none}
+  .page{padding:1rem}
+  .stats-grid2{grid-template-columns:1fr}
+  .stats-cards{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-brand"><i class="ti ti-books"></i> My Book Library</div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span id="sync-status" style="font-size:12px;transition:color .3s"></span>
+    <div class="topbar-nav">
+      <button class="active" onclick="showPage('library')"><i class="ti ti-books"></i> Library</button>
+      <button onclick="showPage('add')"><i class="ti ti-plus"></i> Add Book</button>
+      <button onclick="showPage('stats')"><i class="ti ti-chart-bar"></i> Stats</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Library -->
+<div id="page-library" class="page active">
+  <div class="stats-row" id="summary-stats"></div>
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <input class="search" type="search" id="q" placeholder="Search title, author, publisher…" oninput="renderList()">
+      <input class="filter-sm" type="text" id="f-edition" placeholder="Filter edition…" oninput="renderList()">
+      <input class="filter-sm" type="text" id="f-year" placeholder="Filter year…" oninput="renderList()">
+    </div>
+    <button class="btn-ghost" onclick="clearFilters()"><i class="ti ti-x"></i> Clear</button>
+    <button class="btn-ghost" id="btn-refresh" onclick="refreshAllPrices()"><i class="ti ti-refresh"></i> Refresh</button>
+    <span id="refresh-status" style="font-size:12px;color:var(--text2)"></span>
+  </div>
+  <div id="select-bar" class="select-bar">
+    <span class="select-bar-count" id="select-count"></span>
+    <button class="btn-danger" onclick="massDelete()"><i class="ti ti-trash"></i> Delete selected</button>
+    <button class="btn-ghost" onclick="clearSelection()"><i class="ti ti-x"></i> Cancel</button>
+  </div>
+  <div id="book-list-wrap"></div>
+</div>
+
+<!-- Add book -->
+<div id="page-add" class="page">
+  <div class="form-card">
+    <div class="form-section-title">Search Open Library to auto-fill</div>
+    <div class="lookup-row" style="margin-bottom:6px">
+      <input class="f" type="text" id="lookup-title" placeholder="Title (e.g. Moby Dick)" onkeydown="if(event.key==='Enter')fetchByTitle()">
+      <input class="f" type="text" id="lookup-author" placeholder="Author (optional)" style="max-width:200px" onkeydown="if(event.key==='Enter')fetchByTitle()">
+      <button class="btn-primary" onclick="fetchByTitle()"><i class="ti ti-search"></i> Search</button>
+    </div>
+    <div id="fetch-msg"></div>
+    <div id="search-results"></div>
+    <hr class="divider">
+    <div class="form-section-title">Book details</div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="field"><span class="label">Title *</span><input class="f" id="f-title" placeholder="Book title"></div>
+      <div class="field"><span class="label">Author</span><input class="f" id="f-author" placeholder="Author name(s)"></div>
+    </div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="field"><span class="label">Publisher</span><input class="f" id="f-pub" placeholder="Publisher"></div>
+      <div class="field"><span class="label">Year</span><input class="f" id="f-year-inp" placeholder="e.g. 1851" type="number"></div>
+    </div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="field"><span class="label">Edition</span><input class="f" id="f-ed" placeholder="e.g. 1st, 2nd revised"></div>
+      <div class="field"><span class="label">ISBN <span style="font-weight:400;color:var(--text3)">(optional)</span></span><input class="f" id="f-isbn-val" placeholder="Leave blank if none"></div>
+    </div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="field"><span class="label">Condition</span>
+        <select class="f" id="f-cond">
+          <option value="">— select —</option>
+          <option>Fine/Fine</option><option>VG/VG</option><option>VG/G</option>
+          <option>G/G</option><option>Fair</option><option>Reading copy</option>
+        </select>
+      </div>
+      <div class="field"><span class="label">My Price ($)</span><input class="f" id="f-price" type="number" min="0" step="0.01" placeholder="e.g. 125.00"></div>
+    </div>
+    <div class="field" style="margin-bottom:1.25rem">
+      <span class="label">Notes</span>
+      <textarea class="f" id="f-notes" rows="2" placeholder="Shelf location, provenance, etc."></textarea>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-primary" onclick="addBook()"><i class="ti ti-plus"></i> Add to library</button>
+      <button class="btn-ghost" onclick="clearForm()">Clear</button>
+    </div>
+    <div id="add-msg"></div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div id="page-stats" class="page">
+  <div id="stats-content"></div>
+</div>
+
+<!-- Detail modal -->
+<div id="detail-modal" class="modal-bg hidden" onclick="handleModalBg(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+      <button class="btn-ghost" onclick="closeModal()" style="padding:4px 8px;flex-shrink:0"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="modal-body"></div>
+      <div id="price-result"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="showPriceLinks()"><i class="ti ti-tag"></i> Price links</button>
+      <button onclick="editBook()"><i class="ti ti-edit"></i> Edit</button>
+      <button class="btn-danger" onclick="deleteBook()"><i class="ti ti-trash"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DB_KEY='bookdb_v2', PRICE_KEY='bookdb_prices', PRICE_TTL=7*24*60*60*1000;
+let books=[], priceCache={}, currentId=null;
+let sortCol='title', sortDir=1;
+let sSortCol='title', sSortDir=1;
+let selectedIds=new Set();
+
+/* ── Supabase config ── */
+const SB_URL='https://ldfquqzvzzncriyolywb.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkZnF1cXp2enpuY3JpeW9seXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NzU3ODYsImV4cCI6MjA5NzE1MTc4Nn0.-vCHLXrJxYdQVaYAnltJi12jyqPgdongC9kqdGT3fX4';
+const SB_HEADERS={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+
+function sbUrl(path){ return SB_URL+'/rest/v1/'+path; }
+
+async function sbFetch(path,opts={}){
+  const r=await fetch(sbUrl(path),{headers:SB_HEADERS,...opts});
+  if(!r.ok){ const t=await r.text(); throw new Error(t); }
+  return r.status===204?null:r.json();
+}
+
+/* ── Status indicator ── */
+function setSyncStatus(msg,color='var(--text2)'){
+  const el=document.getElementById('sync-status');
+  if(el){ el.textContent=msg; el.style.color=color; }
+}
+
+/* ── Storage: Supabase primary, localStorage cache ── */
+async function loadBooks(){
+  // Show local cache instantly while cloud loads
+  try{
+    const cached=localStorage.getItem(DB_KEY);
+    if(cached){ books=JSON.parse(cached); renderSummary(); renderList(); }
+  }catch(e){}
+  try{ priceCache=JSON.parse(localStorage.getItem(PRICE_KEY))||{}; }catch(e){ priceCache={}; }
+
+  setSyncStatus('Syncing…','var(--gold)');
+  try{
+    const data=await sbFetch('books?select=*&order=added.desc');
+    if(data&&data.length>0){
+      books=data;
+      localStorage.setItem(DB_KEY,JSON.stringify(books));
+      renderSummary(); renderList();
+      setSyncStatus('Synced ✓','var(--accent)');
+    } else if(data&&data.length===0){
+      // Empty cloud DB — if we have local books, push them up
+      const cached=JSON.parse(localStorage.getItem(DB_KEY)||'[]');
+      if(cached.length>0){
+        books=cached;
+        setSyncStatus('Pushing local books to cloud…','var(--gold)');
+        await pushAllToCloud();
+      } else {
+        books=[];
+        renderSummary(); renderList();
+      }
+      setSyncStatus('Synced ✓','var(--accent)');
+    }
+  }catch(e){
+    setSyncStatus('Offline — using local data','var(--danger)');
+    if(!books.length){
+      try{ books=JSON.parse(localStorage.getItem(DB_KEY))||[]; }catch(_){ books=[]; }
+      renderSummary(); renderList();
+    }
+  }
+  setTimeout(()=>setSyncStatus(''),3000);
+}
+
+async function pushAllToCloud(){
+  // Upsert all local books to Supabase in one call
+  try{
+    await sbFetch('books?on_conflict=id',{
+      method:'POST',
+      body:JSON.stringify(books.map(stripBook)),
+      headers:{...SB_HEADERS,'Prefer':'resolution=merge-duplicates'}
+    });
+    renderSummary(); renderList();
+  }catch(e){ console.error('Push failed',e); }
+}
+
+const SB_COLS=['id','title','author','publisher','year','edition','isbn','condition','price','notes','added'];
+function stripBook(b){ return Object.fromEntries(SB_COLS.map(c=>[c,b[c]||''])); }
+
+async function saveBooks(){
+  // Save to localStorage immediately (fast)
+  try{ localStorage.setItem(DB_KEY,JSON.stringify(books)); }catch(e){}
+  // Then sync to Supabase — strip to known columns to avoid PGRST102
+  setSyncStatus('Saving…','var(--gold)');
+  try{
+    await sbFetch('books?on_conflict=id',{
+      method:'POST',
+      body:JSON.stringify(books.map(stripBook)),
+      headers:{...SB_HEADERS,'Prefer':'resolution=merge-duplicates'}
+    });
+    setSyncStatus('Saved ✓','var(--accent)');
+  }catch(e){
+    setSyncStatus('Cloud save failed — saved locally','var(--danger)');
+  }
+  setTimeout(()=>setSyncStatus(''),3000);
+}
+
+async function deleteBookFromCloud(id){
+  try{ await sbFetch(`books?id=eq.${id}`,{method:'DELETE'}); }catch(e){ console.error('Cloud delete failed',e); }
+}
+
+function savePrices(){ try{ localStorage.setItem(PRICE_KEY,JSON.stringify(priceCache)); }catch(e){} }
+
+function getSample(){ return []; }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtPrice(p){ return p&&parseFloat(p)>0?'$'+parseFloat(p).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):''; }
+
+/* ── Navigation ── */
+function showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.topbar-nav button').forEach((b,i)=>{
+    b.classList.toggle('active',['library','add','stats'][i]===p);
+  });
+  if(p==='stats') renderStats();
+  if(p==='add'){ document.getElementById('search-results').innerHTML=''; document.getElementById('fetch-msg').innerHTML=''; }
+}
+
+/* ── Summary ── */
+function renderSummary(){
+  const total=books.length;
+  const withISBN=books.filter(b=>b.isbn).length;
+  const priced=books.filter(b=>b.price&&parseFloat(b.price)>0);
+  const totalVal=priced.reduce((s,b)=>s+parseFloat(b.price),0);
+  const valStr=totalVal>0?'$'+totalVal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$0.00';
+  document.getElementById('summary-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-card-icon gold"><i class="ti ti-currency-dollar"></i></div><div class="stat-card-num">${total}</div><div class="stat-card-lbl">Books in collection</div></div>
+    <div class="stat-card"><div class="stat-card-icon"><i class="ti ti-book"></i></div><div class="stat-card-num">${total-withISBN}</div><div class="stat-card-lbl">Pre-ISBN books</div></div>
+    <div class="stat-card"><div class="stat-card-icon"><i class="ti ti-award"></i></div><div class="stat-card-num">${books.filter(b=>(b.edition||'').toLowerCase().includes('1st')).length}</div><div class="stat-card-lbl">First editions</div></div>
+    <div class="stat-card"><div class="stat-card-icon gold"><i class="ti ti-cash"></i></div><div class="stat-card-num" style="font-size:${totalVal>=10000?'18px':totalVal>=1000?'22px':'28px'}">${valStr}</div><div class="stat-card-lbl">Collection value <span style="color:var(--text3)">(${priced.length} priced)</span></div></div>`;
+}
+
+/* ── Sort helpers ── */
+function sortBooks(arr, col, dir){
+  return [...arr].sort((a,b)=>{
+    let av=a[col]||'', bv=b[col]||'';
+    if(col==='price'||col==='year'){ av=parseFloat(av)||0; bv=parseFloat(bv)||0; return dir*(av-bv); }
+    return dir*String(av).localeCompare(String(bv),undefined,{numeric:true});
+  });
+}
+
+function setSort(col){
+  if(sortCol===col) sortDir*=-1; else{ sortCol=col; sortDir=1; }
+  renderList();
+}
+
+function thIcon(col){
+  if(sortCol!==col) return '<i class="ti ti-arrows-sort"></i>';
+  return sortDir===1?'<i class="ti ti-sort-ascending"></i>':'<i class="ti ti-sort-descending"></i>';
+}
+function thClass(col){ return sortCol===col?'th sorted':'th'; }
+
+/* ── Library render ── */
+function renderList(){
+  const q=document.getElementById('q').value.toLowerCase();
+  const edF=document.getElementById('f-edition').value.toLowerCase();
+  const yrF=document.getElementById('f-year').value.toLowerCase();
+
+  let filtered=books.filter(b=>{
+    const text=`${b.title} ${b.author} ${b.publisher}`.toLowerCase();
+    return (!q||text.includes(q))&&(!edF||(b.edition||'').toLowerCase().includes(edF))&&(!yrF||(b.year||'').toString().includes(yrF));
+  });
+  filtered=sortBooks(filtered,sortCol,sortDir);
+
+  const wrap=document.getElementById('book-list-wrap');
+  if(!filtered.length){
+    wrap.innerHTML='<div class="empty-state"><i class="ti ti-books"></i>No books found — try adjusting your search.</div>';
+    return;
+  }
+
+  const allSelected=filtered.length>0&&filtered.every(b=>selectedIds.has(b.id));
+  const header=`
+    <div class="book-list-header">
+      <div class="blc">
+        <input type="checkbox" ${allSelected?'checked':''} onchange="toggleSelectAll(this)" title="Select all">
+        <span></span>
+        <span class="${thClass('title')}" onclick="setSort('title')">Title / Author ${thIcon('title')}</span>
+        <span class="${thClass('publisher')}" onclick="setSort('publisher')">Publisher ${thIcon('publisher')}</span>
+        <span class="${thClass('year')}" onclick="setSort('year')">Year ${thIcon('year')}</span>
+        <span class="${thClass('edition')}" onclick="setSort('edition')">Edition / Cond. ${thIcon('edition')}</span>
+        <span class="${thClass('price')}" onclick="setSort('price')">My Price ${thIcon('price')}</span>
+        <span>Search</span>
+        <span></span>
+      </div>
+    </div>`;
+
+  const rows=filtered.map(b=>{
+    const condBadge=b.condition?`<span class="badge badge-muted" style="margin-left:4px">${esc(b.condition)}</span>`:'';
+    const edBadge=b.edition?`<span class="badge badge-accent">${esc(b.edition)}</span>`:'—';
+    const pv=fmtPrice(b.price);
+    const priceHtml=pv?`<span style="color:var(--accent);font-weight:500">${pv}</span>`:`<span style="color:var(--text3)">—</span>`;
+    const checked=selectedIds.has(b.id)?'checked':'';
+    return `<div class="book-row${selectedIds.has(b.id)?' selected':''}" id="row-${b.id}"><div class="blc">
+      <input type="checkbox" ${checked} onchange="toggleSelect('${b.id}',this)">
+      <div class="book-thumb">📖</div>
+      <div><div class="book-title">${esc(b.title)}</div><div class="book-author">${esc(b.author||'—')}</div></div>
+      <div class="book-meta">${esc(b.publisher||'—')}</div>
+      <div class="book-year">${esc(b.year||'—')}</div>
+      <div>${edBadge}${condBadge}</div>
+      <div>${priceHtml}</div>
+      <div id="pcell-${b.id}">${priceCellHtml(b)}</div>
+      <div class="row-action"><button class="btn-ghost" onclick="openDetail('${b.id}')" style="padding:4px 8px"><i class="ti ti-dots-vertical"></i></button></div>
+    </div></div>`;
+  }).join('');
+
+  wrap.innerHTML=`<div class="book-list">${header}${rows}
+    <div class="list-footer">
+      <span>${filtered.length} of ${books.length} books</span>
+      <span style="color:var(--text3);font-size:11px">Price links use ISBN when available, otherwise title &amp; author</span>
+    </div>
+  </div>`;
+
+  filtered.forEach(b=>{
+    if(priceStale(priceCache[b.id])){
+      fetchPriceForBook(b).then(()=>{
+        const c=document.getElementById('pcell-'+b.id); if(c) c.innerHTML=priceCellHtml(b);
+      });
+    }
+  });
+}
+
+function clearFilters(){
+  document.getElementById('q').value='';
+  document.getElementById('f-edition').value='';
+  document.getElementById('f-year').value='';
+  renderList();
+}
+
+/* ── Selection & mass delete ── */
+function toggleSelect(id, cb){
+  if(cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+  const row=document.getElementById('row-'+id);
+  if(row) row.classList.toggle('selected', cb.checked);
+  updateSelectBar();
+  // update select-all checkbox state
+  const q=document.getElementById('q').value.toLowerCase();
+  const edF=document.getElementById('f-edition').value.toLowerCase();
+  const yrF=document.getElementById('f-year').value.toLowerCase();
+  const filtered=books.filter(b=>{
+    const text=`${b.title} ${b.author} ${b.publisher}`.toLowerCase();
+    return (!q||text.includes(q))&&(!edF||(b.edition||'').toLowerCase().includes(edF))&&(!yrF||(b.year||'').toString().includes(yrF));
+  });
+  const allCb=document.querySelector('.book-list-header input[type=checkbox]');
+  if(allCb) allCb.checked=filtered.length>0&&filtered.every(b=>selectedIds.has(b.id));
+}
+
+function toggleSelectAll(cb){
+  const q=document.getElementById('q').value.toLowerCase();
+  const edF=document.getElementById('f-edition').value.toLowerCase();
+  const yrF=document.getElementById('f-year').value.toLowerCase();
+  const filtered=books.filter(b=>{
+    const text=`${b.title} ${b.author} ${b.publisher}`.toLowerCase();
+    return (!q||text.includes(q))&&(!edF||(b.edition||'').toLowerCase().includes(edF))&&(!yrF||(b.year||'').toString().includes(yrF));
+  });
+  filtered.forEach(b=>{
+    if(cb.checked) selectedIds.add(b.id); else selectedIds.delete(b.id);
+    const row=document.getElementById('row-'+b.id);
+    if(row) row.classList.toggle('selected', cb.checked);
+    const rowCb=row?row.querySelector('input[type=checkbox]'):null;
+    if(rowCb) rowCb.checked=cb.checked;
+  });
+  updateSelectBar();
+}
+
+function updateSelectBar(){
+  const bar=document.getElementById('select-bar');
+  const count=document.getElementById('select-count');
+  if(selectedIds.size>0){
+    bar.classList.add('visible');
+    count.textContent=`${selectedIds.size} book${selectedIds.size===1?'':'s'} selected`;
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function clearSelection(){
+  selectedIds.clear();
+  document.querySelectorAll('.book-row.selected').forEach(r=>r.classList.remove('selected'));
+  document.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
+  updateSelectBar();
+}
+
+async function massDelete(){
+  const count=selectedIds.size;
+  if(!count) return;
+  if(!confirm(`Permanently delete ${count} book${count===1?'':'s'}? This cannot be undone.`)) return;
+  const ids=[...selectedIds];
+  // Remove from local array
+  ids.forEach(id=>{ delete priceCache[id]; });
+  savePrices();
+  books=books.filter(b=>!ids.includes(b.id));
+  localStorage.setItem(DB_KEY,JSON.stringify(books));
+  selectedIds.clear();
+  updateSelectBar();
+  renderSummary(); renderList();
+  // Delete from Supabase — send all ids in one request
+  setSyncStatus('Deleting…','var(--gold)');
+  try{
+    const idList=ids.map(id=>`id.eq.${id}`).join(',');
+    await sbFetch(`books?or=(${idList})`,{method:'DELETE'});
+    setSyncStatus('Deleted ✓','var(--accent)');
+  }catch(e){
+    setSyncStatus('Cloud delete failed — removed locally','var(--danger)');
+  }
+  setTimeout(()=>setSyncStatus(''),3000);
+}
+
+/* ── Price helpers ── */
+function priceStale(p){ return !p||(Date.now()-(p.fetched||0))>PRICE_TTL; }
+
+function priceUrls(b){
+  const isbn=(b.isbn||'').replace(/[-\s]/g,'');
+  const t=encodeURIComponent(b.title), a=encodeURIComponent(b.author||'');
+  const ta=encodeURIComponent(`${b.title} ${b.author||''}`.trim());
+  return {
+    abe: isbn?`https://www.abebooks.com/servlet/SearchResults?isbn=${isbn}`:`https://www.abebooks.com/servlet/SearchResults?tn=${t}&an=${a}`,
+    amz: isbn?`https://www.amazon.com/s?k=${isbn}&i=stripbooks`:`https://www.amazon.com/s?k=${ta}&i=stripbooks`,
+    goog:`https://www.google.com/search?q=${encodeURIComponent(`${b.title} ${b.author||''} buy book`.trim())}&tbm=shop`,
+    ol:  isbn?`https://openlibrary.org/isbn/${isbn}`:`https://openlibrary.org/search?q=${ta}`,
+    hasIsbn:!!isbn
+  };
+}
+
+function priceCellHtml(b){
+  const u=priceUrls(b);
+  return `<div class="price-links-cell"><a href="${u.abe}" target="_blank" rel="noopener">Abe</a><a href="${u.amz}" target="_blank" rel="noopener">Amz</a></div>`;
+}
+
+async function fetchPriceForBook(b){
+  try{ await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(b.title)}&limit=1&fields=key`,{signal:AbortSignal.timeout(5000)}); }catch(e){}
+  priceCache[b.id]={fetched:Date.now()}; savePrices();
+}
+
+async function refreshAllPrices(){
+  const btn=document.getElementById('btn-refresh'), st=document.getElementById('refresh-status');
+  btn.disabled=true; priceCache={}; savePrices();
+  let done=0;
+  for(const b of books){ await fetchPriceForBook(b); done++; st.textContent=`${done}/${books.length}`; await new Promise(r=>setTimeout(r,250)); }
+  st.textContent='Done'; setTimeout(()=>{ st.textContent=''; },4000); btn.disabled=false; renderList();
+}
+
+/* ── Open Library lookup ── */
+async function fetchByTitle(){
+  const title=document.getElementById('lookup-title').value.trim();
+  const author=document.getElementById('lookup-author').value.trim();
+  if(!title) return;
+  const msg=document.getElementById('fetch-msg'), res=document.getElementById('search-results');
+  msg.innerHTML='<span class="msg msg-info">Searching Open Library…</span>'; res.innerHTML='';
+  try{
+    const q=encodeURIComponent(title+(author?' '+author:''));
+    const r=await fetch(`https://openlibrary.org/search.json?q=${q}&limit=8&fields=title,author_name,publisher,first_publish_year,isbn,edition_count,key`);
+    const data=await r.json();
+    if(!data.docs||!data.docs.length){ msg.innerHTML='<span class="msg msg-err">No results. Try different keywords or fill in manually.</span>'; return; }
+    msg.innerHTML=`<span class="msg msg-ok">${data.docs.length} results — click one to fill the form</span>`;
+    res.innerHTML='<div class="results-list">'+data.docs.map((d,i)=>{
+      const a=(d.author_name||[]).join(', '), pub=(d.publisher||[])[0]||'', yr=d.first_publish_year||'', ed=d.edition_count?`${d.edition_count} ed.`:'';
+      return `<div class="result-item" onclick="fillFromResult(${i})"><div class="rt">${esc(d.title||'')}</div><div class="rs">${[a,pub,yr,ed].filter(Boolean).join(' · ')}</div></div>`;
+    }).join('')+'</div>';
+    window._searchResults=data.docs;
+  }catch(e){ msg.innerHTML='<span class="msg msg-err">Search failed — check connection or fill in manually.</span>'; }
+}
+
+function fillFromResult(i){
+  const d=window._searchResults[i]; if(!d) return;
+  document.getElementById('f-title').value=d.title||'';
+  document.getElementById('f-author').value=(d.author_name||[]).join(', ');
+  document.getElementById('f-pub').value=(d.publisher||[])[0]||'';
+  document.getElementById('f-year-inp').value=d.first_publish_year||'';
+  document.getElementById('f-isbn-val').value='';
+  document.getElementById('f-ed').value='';
+  document.getElementById('search-results').innerHTML='';
+  document.getElementById('fetch-msg').innerHTML='<span class="msg msg-ok">Fields filled — review and adjust, especially edition and ISBN.</span>';
+  document.getElementById('f-title').focus();
+}
+
+/* ── Add / clear / edit ── */
+function addBook(){
+  const title=document.getElementById('f-title').value.trim();
+  if(!title){ showMsg('add-msg','Title is required.','err'); return; }
+  const book={
+    id:uid(), title,
+    author:document.getElementById('f-author').value.trim(),
+    publisher:document.getElementById('f-pub').value.trim(),
+    year:document.getElementById('f-year-inp').value.trim(),
+    edition:document.getElementById('f-ed').value.trim(),
+    isbn:document.getElementById('f-isbn-val').value.trim(),
+    condition:document.getElementById('f-cond').value,
+    price:document.getElementById('f-price').value.trim(),
+    notes:document.getElementById('f-notes').value.trim(),
+    added:new Date().toISOString()
+  };
+  books.unshift(book); saveBooks(); renderSummary(); clearForm();
+  showMsg('add-msg',`"${title}" added!`,'ok'); renderList();
+}
+
+function clearForm(){
+  ['f-title','f-author','f-pub','f-year-inp','f-ed','f-isbn-val','f-price','f-notes','lookup-title','lookup-author'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('f-cond').value='';
+  document.getElementById('fetch-msg').innerHTML=''; document.getElementById('search-results').innerHTML='';
+  const am=document.getElementById('add-msg'); if(am) am.innerHTML='';
+}
+
+function showMsg(id,text,type){
+  const el=document.getElementById(id);
+  el.innerHTML=`<span class="msg msg-${type==='ok'?'ok':type==='info'?'info':'err'}" style="margin-top:10px;display:inline-block">${text}</span>`;
+  setTimeout(()=>{ el.innerHTML=''; },5000);
+}
+
+/* ── Detail modal ── */
+function openDetail(id){
+  currentId=id; const b=books.find(x=>x.id===id); if(!b) return;
+  document.getElementById('modal-title').textContent=b.title;
+  document.getElementById('price-result').innerHTML='';
+  document.getElementById('modal-body').innerHTML=`
+    <table class="detail-table">
+      ${mrow('Author',b.author)}${mrow('Publisher',b.publisher)}${mrow('Year',b.year)}
+      ${mrow('Edition',b.edition)}${mrow('Condition',b.condition)}
+      ${mrow('My Price',fmtPrice(b.price))}
+      ${mrow('ISBN',b.isbn)}${mrow('Notes',b.notes)}
+      ${mrow('Added',b.added?new Date(b.added).toLocaleDateString():'')}
+    </table>`;
+  document.getElementById('detail-modal').classList.remove('hidden');
+}
+function mrow(l,v){ if(!v) return ''; return `<tr><td>${l}</td><td>${esc(v)}</td></tr>`; }
+function handleModalBg(e){ if(e.target===e.currentTarget) closeModal(); }
+function closeModal(){ document.getElementById('detail-modal').classList.add('hidden'); currentId=null; }
+
+function showPriceLinks(){
+  const b=books.find(x=>x.id===currentId); if(!b) return;
+  const u=priceUrls(b);
+  const note=u.hasIsbn?`Searching by ISBN <code style="font-size:11px">${(b.isbn||'').replace(/[-\s]/g,'')}</code> — exact edition match.`:`No ISBN — searching by title &amp; author.`;
+  document.getElementById('price-result').innerHTML=`
+    <div class="price-panel"><div class="price-panel-title">Price links</div>
+    <div class="price-panel-links">
+      <a href="${u.abe}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> AbeBooks</a>
+      <a href="${u.amz}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> Amazon</a>
+      <a href="${u.goog}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> Google Shopping</a>
+      <a href="${u.ol}" target="_blank" rel="noopener"><i class="ti ti-book"></i> Open Library</a>
+    </div>
+    <div style="margin-top:8px;font-size:11px;color:var(--text2)">${note}</div></div>`;
+}
+
+function deleteBook(){
+  const b=books.find(x=>x.id===currentId); if(!b) return;
+  if(!confirm(`Delete "${b.title}"?`)) return;
+  delete priceCache[b.id]; savePrices();
+  books=books.filter(x=>x.id!==currentId);
+  localStorage.setItem(DB_KEY,JSON.stringify(books));
+  deleteBookFromCloud(currentId);
+  closeModal(); renderSummary(); renderList();
+}
+
+function editBook(){
+  const b=books.find(x=>x.id===currentId); if(!b) return;
+  closeModal(); showPage('add');
+  document.getElementById('f-title').value=b.title||'';
+  document.getElementById('f-author').value=b.author||'';
+  document.getElementById('f-pub').value=b.publisher||'';
+  document.getElementById('f-year-inp').value=b.year||'';
+  document.getElementById('f-ed').value=b.edition||'';
+  document.getElementById('f-isbn-val').value=b.isbn||'';
+  document.getElementById('f-cond').value=b.condition||'';
+  document.getElementById('f-price').value=b.price||'';
+  document.getElementById('f-notes').value=b.notes||'';
+  books=books.filter(x=>x.id!==currentId); saveBooks();
+}
+
+/* ── Stats page ── */
+function setSortStats(col){
+  if(sSortCol===col) sSortDir*=-1; else{ sSortCol=col; sSortDir=1; }
+  renderStatsTable();
+}
+
+function renderStatsTable(){
+  const qS=document.getElementById('s-q')?document.getElementById('s-q').value.toLowerCase():'';
+  const fAuthor=document.getElementById('s-author')?document.getElementById('s-author').value.toLowerCase():'';
+  const fPub=document.getElementById('s-pub')?document.getElementById('s-pub').value.toLowerCase():'';
+  const fYear=document.getElementById('s-year')?document.getElementById('s-year').value.toLowerCase():'';
+  const fCond=document.getElementById('s-cond')?document.getElementById('s-cond').value:'';
+  const fPriceMin=parseFloat(document.getElementById('s-price-min')?document.getElementById('s-price-min').value:'')||0;
+  const fPriceMax=parseFloat(document.getElementById('s-price-max')?document.getElementById('s-price-max').value:'')||Infinity;
+
+  let filtered=books.filter(b=>{
+    const text=`${b.title} ${b.author} ${b.publisher}`.toLowerCase();
+    const price=parseFloat(b.price)||0;
+    return (!qS||text.includes(qS))&&
+      (!fAuthor||(b.author||'').toLowerCase().includes(fAuthor))&&
+      (!fPub||(b.publisher||'').toLowerCase().includes(fPub))&&
+      (!fYear||(b.year||'').toString().includes(fYear))&&
+      (!fCond||b.condition===fCond)&&
+      (fPriceMin===0||price>=fPriceMin)&&
+      (fPriceMax===Infinity||price<=fPriceMax);
+  });
+  filtered=sortBooks(filtered,sSortCol,sSortDir);
+
+  function sth(col,label){
+    const active=sSortCol===col;
+    const icon=active?(sSortDir===1?'<i class="ti ti-sort-ascending"></i>':'<i class="ti ti-sort-descending"></i>'):'<i class="ti ti-arrows-sort" style="opacity:.4"></i>';
+    return `<th class="${active?'s-sorted':''}" onclick="setSortStats('${col}')">${label} ${icon}</th>`;
+  }
+
+  const tbody=filtered.map(b=>`
+    <tr>
+      <td><span style="font-weight:500">${esc(b.title)}</span></td>
+      <td>${esc(b.author||'—')}</td>
+      <td>${esc(b.publisher||'—')}</td>
+      <td>${esc(b.year||'—')}</td>
+      <td>${b.edition?`<span class="badge badge-accent">${esc(b.edition)}</span>`:'—'}</td>
+      <td>${b.condition?`<span class="badge badge-muted">${esc(b.condition)}</span>`:'—'}</td>
+      <td style="color:var(--accent);font-weight:500">${fmtPrice(b.price)||'—'}</td>
+      <td><button class="btn-ghost" style="padding:3px 8px;font-size:12px" onclick="openDetailFromStats('${b.id}')"><i class="ti ti-dots-vertical"></i></button></td>
+    </tr>`).join('');
+
+  const totalVal=filtered.filter(b=>b.price&&parseFloat(b.price)>0).reduce((s,b)=>s+parseFloat(b.price),0);
+
+  const el=document.getElementById('stats-table-section');
+  if(!el) return;
+  el.innerHTML=`
+    <div class="stats-table-wrap">
+      <table class="stats-table">
+        <thead><tr>
+          ${sth('title','Title')}${sth('author','Author')}${sth('publisher','Publisher')}
+          ${sth('year','Year')}${sth('edition','Edition')}${sth('condition','Condition')}
+          ${sth('price','Price')}<th></th>
+        </tr></thead>
+        <tbody>${tbody||'<tr><td colspan="8" style="padding:2rem;text-align:center;color:var(--text2)">No books match filters</td></tr>'}</tbody>
+      </table>
+      <div class="list-footer">
+        <span>${filtered.length} of ${books.length} books shown</span>
+        <span style="color:var(--accent);font-weight:500">${totalVal>0?'Filtered value: $'+totalVal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):''}</span>
+      </div>
+    </div>`;
+}
+
+function openDetailFromStats(id){
+  showPage('library'); // switch back so modal renders properly
+  openDetail(id);
+}
+
+function renderStats(){
+  const total=books.length;
+  const withISBN=books.filter(b=>b.isbn).length;
+  const priced=books.filter(b=>b.price&&parseFloat(b.price)>0);
+  const totalVal=priced.reduce((s,b)=>s+parseFloat(b.price),0);
+  const pubs={}, conds={};
+  books.forEach(b=>{
+    if(b.publisher) pubs[b.publisher]=(pubs[b.publisher]||0)+1;
+    if(b.condition) conds[b.condition]=(conds[b.condition]||0)+1;
+  });
+  const topP=Object.entries(pubs).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const topC=Object.entries(conds).sort((a,b)=>b[1]-a[1]);
+
+  document.getElementById('stats-content').innerHTML=`
+    <div class="stats-cards">
+      <div class="stat-card"><div class="stat-card-icon gold"><i class="ti ti-books"></i></div><div class="stat-card-num">${total}</div><div class="stat-card-lbl">Total books</div></div>
+      <div class="stat-card"><div class="stat-card-icon"><i class="ti ti-history"></i></div><div class="stat-card-num">${total-withISBN}</div><div class="stat-card-lbl">Pre-ISBN</div></div>
+      <div class="stat-card"><div class="stat-card-icon"><i class="ti ti-award"></i></div><div class="stat-card-num">${books.filter(b=>(b.edition||'').toLowerCase().includes('1st')).length}</div><div class="stat-card-lbl">First editions</div></div>
+      <div class="stat-card"><div class="stat-card-icon gold"><i class="ti ti-cash"></i></div><div class="stat-card-num" style="font-size:${totalVal>=10000?'16px':totalVal>=1000?'20px':'26px'}">${totalVal>0?'$'+totalVal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$0.00'}</div><div class="stat-card-lbl">Collection value (${priced.length} priced)</div></div>
+    </div>
+
+    <div class="stats-controls">
+      <div class="field"><span class="label">Search</span><input class="f" id="s-q" placeholder="Title, author, publisher…" oninput="renderStatsTable()"></div>
+      <div class="field"><span class="label">Author</span><input class="f" id="s-author" placeholder="Filter author…" oninput="renderStatsTable()"></div>
+      <div class="field"><span class="label">Publisher</span><input class="f" id="s-pub" placeholder="Filter publisher…" oninput="renderStatsTable()"></div>
+      <div class="field"><span class="label">Year</span><input class="f" id="s-year" placeholder="e.g. 1925" oninput="renderStatsTable()"></div>
+      <div class="field"><span class="label">Condition</span>
+        <select class="f" id="s-cond" onchange="renderStatsTable()">
+          <option value="">Any condition</option>
+          <option>Fine/Fine</option><option>VG/VG</option><option>VG/G</option>
+          <option>G/G</option><option>Fair</option><option>Reading copy</option>
+        </select>
+      </div>
+      <div class="field"><span class="label">Price min ($)</span><input class="f" id="s-price-min" type="number" min="0" placeholder="0" oninput="renderStatsTable()"></div>
+      <div class="field"><span class="label">Price max ($)</span><input class="f" id="s-price-max" type="number" min="0" placeholder="any" oninput="renderStatsTable()"></div>
+      <div class="field" style="justify-content:flex-end"><button class="btn-ghost" onclick="clearStatsFilters()"><i class="ti ti-x"></i> Clear</button></div>
+    </div>
+
+    <div id="stats-table-section"></div>
+
+    <div class="stats-grid2">
+      ${topP.length?`<div class="stats-section"><h3>Top publishers</h3>${topP.map(([p,c])=>`<div class="stats-bar-row"><span>${esc(p)}</span><span class="badge badge-muted">${c}</span></div>`).join('')}</div>`:''}
+      ${topC.length?`<div class="stats-section"><h3>Condition breakdown</h3>${topC.map(([c,n])=>`<div class="stats-bar-row"><span>${esc(c)}</span><span class="badge badge-gold">${n}</span></div>`).join('')}</div>`:''}
+    </div>
+
+    <div class="export-row">
+      <button onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button>
+      <button onclick="importCSV()"><i class="ti ti-upload"></i> Import CSV</button>
+      <button onclick="exportJSON()"><i class="ti ti-download"></i> Backup JSON</button>
+      <button onclick="importJSON()"><i class="ti ti-upload"></i> Restore JSON</button>
+    </div>
+    <input type="file" id="import-file" style="display:none">`;
+
+  renderStatsTable();
+}
+
+function clearStatsFilters(){
+  ['s-q','s-author','s-pub','s-year','s-price-min','s-price-max'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('s-cond').value='';
+  renderStatsTable();
+}
+
+/* ── Import / Export ── */
+function exportCSV(){
+  const cols=['title','author','publisher','year','edition','isbn','condition','price','notes'];
+  const rows=[cols.join(','),...books.map(b=>cols.map(c=>`"${(b[c]||'').replace(/"/g,'""')}"`).join(','))];
+  dl('my-library.csv',rows.join('\n'),'text/csv');
+}
+function exportJSON(){ dl('my-library-backup.json',JSON.stringify(books,null,2),'application/json'); }
+function importCSV(){ const fi=document.getElementById('import-file'); fi.accept='.csv'; fi.onchange=handleCSV; fi.click(); }
+function importJSON(){ const fi=document.getElementById('import-file'); fi.accept='.json'; fi.onchange=handleJSON; fi.click(); }
+
+function handleJSON(e){
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=async ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!Array.isArray(data)) throw 0;
+      if(!confirm(`Import ${data.length} books? Duplicates (same title) will be skipped.`)) return;
+      const ex=new Set(books.map(b=>b.title.toLowerCase())); let added=0;
+      data.forEach(b=>{ if(b.title&&!ex.has(b.title.toLowerCase())){ books.push({...b,id:b.id||uid()}); ex.add(b.title.toLowerCase()); added++; } });
+      await saveBooks(); renderSummary(); renderList();
+      if(document.getElementById('stats-content').innerHTML) renderStats();
+      alert(`Imported ${added} books.`);
+    }catch(err){ alert('Invalid JSON.'); }
+  };
+  r.readAsText(file);
+}
+
+function handleCSV(e){
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=async ev=>{
+    const lines=ev.target.result.split('\n').filter(Boolean);
+    if(lines.length<2){ alert('CSV empty.'); return; }
+    const headers=lines[0].split(',').map(h=>h.replace(/"/g,'').trim());
+    const ex=new Set(books.map(b=>b.title.toLowerCase())); let added=0;
+    lines.slice(1).forEach(line=>{
+      const vals=[]; let cur='',inQ=false;
+      for(const c of line){ if(c==='"') inQ=!inQ; else if(c===','&&!inQ){ vals.push(cur.trim()); cur=''; } else cur+=c; }
+      vals.push(cur.trim());
+      const book={}; headers.forEach((h,i)=>book[h]=(vals[i]||'').replace(/^"|"$/g,'').replace(/""/g,'"'));
+      if(book.title&&!ex.has(book.title.toLowerCase())){ books.push({...book,id:uid()}); ex.add(book.title.toLowerCase()); added++; }
+    });
+    await saveBooks(); renderSummary(); renderList();
+    if(document.getElementById('stats-content').innerHTML) renderStats();
+    alert(`Imported ${added} books from CSV.`);
+  };
+  r.readAsText(file);
+}
+
+function dl(filename,content,type){
+  const blob=new Blob([content],{type}), a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href);
+}
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+loadBooks();
+</script>
+</body>
+</html>
