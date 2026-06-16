@@ -338,22 +338,25 @@ async function pushAllToCloud(){
   try{
     await sbFetch('books?on_conflict=id',{
       method:'POST',
-      body:JSON.stringify(books),
+      body:JSON.stringify(books.map(stripBook)),
       headers:{...SB_HEADERS,'Prefer':'resolution=merge-duplicates'}
     });
     renderSummary(); renderList();
   }catch(e){ console.error('Push failed',e); }
 }
 
+const SB_COLS=['id','title','author','publisher','year','edition','isbn','condition','price','notes','added'];
+function stripBook(b){ return Object.fromEntries(SB_COLS.map(c=>[c,b[c]||''])); }
+
 async function saveBooks(){
   // Save to localStorage immediately (fast)
   try{ localStorage.setItem(DB_KEY,JSON.stringify(books)); }catch(e){}
-  // Then sync to Supabase
+  // Then sync to Supabase — strip to known columns to avoid PGRST102
   setSyncStatus('Saving…','var(--gold)');
   try{
     await sbFetch('books?on_conflict=id',{
       method:'POST',
-      body:JSON.stringify(books),
+      body:JSON.stringify(books.map(stripBook)),
       headers:{...SB_HEADERS,'Prefer':'resolution=merge-duplicates'}
     });
     setSyncStatus('Saved ✓','var(--accent)');
